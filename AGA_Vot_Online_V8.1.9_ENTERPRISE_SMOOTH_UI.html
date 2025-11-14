@@ -770,121 +770,166 @@ window.resetTotal = function(){
 
 /* ============ RAPORT VOTURI (PDF) – cu procură generală & specială ============ */
 window.genereazaRaportVot = async function(){
-  const sid=$('idSesiune').value.trim();
-  if(!sid){toast("Completați ID sesiune înainte de raport vot.");return;}
-  const total=actionari.reduce((s,a)=>s+Number(a.actiuni||0),0);
+  window.genereazaRaportVot = async function () {
+  const sid = $('idSesiune').value.trim();
+  if (!sid) {
+    toast("Completați ID sesiune înainte de raport vot.");
+    return;
+  }
 
+  const total = actionari.reduce((s, a) => s + Number(a.actiuni || 0), 0);
+
+  // Mapare token -> acționar
   const byToken = {};
-  actionari.forEach(a=>{ if(a.token) byToken[a.token]=a; });
+  actionari.forEach(a => {
+    if (a.token) byToken[a.token] = a;
+  });
 
-  const genRep = {}, specRep={};
-  actionari.forEach(a=>{
-    if(a.procura){
-      const t=classifyType(a);
-      if(t==="procuraGenerala"){
-        if(!genRep[a.procura]) genRep[a.procura]=[];
-        genRep[a.procura].push(a);
-      }else if(t==="procuraSpeciala"){
-        if(!specRep[a.procura]) specRep[a.procura]=[];
-        specRep[a.procura].push(a);
-      }
+  // 1) Construim relațiile pentru PROCURA GENERALĂ:
+  // reprezentant -> listă mandanți (doar cei cu tip 'procuraGenerala')
+  const representedBy = {};
+  actionari.forEach(a => {
+    const t = classifyType(a);
+    if (t === 'procuraGenerala' && a.procura) {
+      if (!representedBy[a.procura]) representedBy[a.procura] = [];
+      representedBy[a.procura].push(a);
     }
   });
 
+  // 2) Calculăm "blocul de acțiuni" pentru fiecare acționar:
+  //    - simplu: propriile acțiuni
+  //    - reprezentant cu procură generală: propriile + ale mandanților
+  const repShares = {};
+  actionari.forEach(a => {
+    let shares = Number(a.actiuni || 0);
+    const reps = representedBy[a.nume];
+    if (reps) {
+      reps.forEach(m => {
+        shares += Number(m.actiuni || 0);
+      });
+    }
+    repShares[a.nume] = shares;
+  });
+
+  // 3) Inițializăm sume pe puncte
   const sumPuncte = {};
-  ordineZi.forEach(p=>{sumPuncte[p.id]={DA:0,NU:0,ABTINERE:0};});
+  ordineZi.forEach(p => {
+    sumPuncte[p.id] = { DA: 0, NU: 0, ABTINERE: 0 };
+  });
 
-  // 1) voturi online (inclusiv reprezentanți cu procura generală)
-  const vsnap = await getDocs(collection(db,'sesiuni',sid,'votes'));
-  vsnap.forEach(docv=>{
-    const d=docv.data();
+  // 4) Voturi ONLINE (delegat + online simpli)
+  const vsnap = await getDocs(collection(db, 'sesiuni', sid, 'votes'));
+  vsnap.forEach(docv => {
     const token = docv.id;
+    const data = docv.data();
     const a = byToken[token];
-    if(!a) return;
-    const type=classifyType(a);
-    if(type!=="online" && type!=="procuraGenerala") return;
-    let actBase = Number(a.actiuni||0);
-    if(genRep[a.nume]){
-      genRep[a.nume].forEach(m=>{actBase+=Number(m.actiuni||0);});
-    }
-    const rasp=d.raspunsuri||{};
-    Object.keys(rasp).forEach(k=>{
-      const v=(rasp[k]||"").toUpperCase();
-      if(!sumPuncte[k]) sumPuncte[k]={DA:0,NU:0,ABTINERE:0};
-      if(v==="DA") sumPuncte[k].DA+=actBase;
-      else if(v==="NU") sumPuncte[k].NU+=actBase;
-      else if(v==="ABTINERE") sumPuncte[k].ABTINERE+=actBase;
+    if (!a) return;
+
+    const type = classifyType(a);
+
+    // Corespondență și procura specială NU vin de aici
+    if (type === 'coresp' || type === 'procuraSpeciala') return;
+
+    // Online simplu sau reprezentant cu procură generală
+    let shares = repShares[a.nume] != null
+      ? repShares[a.nume]
+      : Number(a.actiuni || 0);
+
+    const rasp = data.raspunsuri || {};
+    Object.keys(rasp).forEach(qid => {
+      const v = (rasp[qid] || '').toUpperCase();
+      if (!sumPuncte[qid]) sumPuncte[qid] = { DA: 0, NU: 0, ABTINERE: 0 };
+      if (v === 'DA') sumPuncte[qid].DA += shares;
+      else if (v === 'NU') sumPuncte[qid].NU += shares;
+      else if (v === 'ABTINERE') sumPuncte[qid].ABTINERE += shares;
     });
   });
 
-  // 2) voturi prin corespondență & procura specială din InstrucțiuniVot
-  actionari.forEach(a=>{
-    const type=classifyType(a);
-    if(type!=="coresp" && type!=="procuraSpeciala") return;
-    if(!a.instructiuni || !a.instructiuni.trim()) return;
-    const acts=Number(a.actiuni||0);
-    const instr=a.instructiuni.split(';');
-    instr.forEach(pair=>{
-      const p=pair.split(':');
-      if(p.length!==2) return;
-      const qid=p[0].trim(); const v=p[1].trim().toUpperCase();
-      if(!sumPuncte[qid]) sumPuncte[qid]={DA:0,NU:0,ABTINERE:0};
-      if(v==="DA") sumPuncte[qid].DA+=acts;
-      else if(v==="NU") sumPuncte[qid].NU+=acts;
-      else if(v==="ABTINERE") sumPuncte[qid].ABTINERE+=acts;
+  // 5) Voturi OFFLINE (corespondență + procura specială)
+  actionari.forEach(a => {
+    const type = classifyType(a);
+    if (type !== 'coresp' && type !== 'procuraSpeciala') return;
+    if (!a.instructiuni || !a.instructiuni.trim()) return;
+
+    const shares = Number(a.actiuni || 0);
+    const pairs = a.instructiuni.split(';');
+    pairs.forEach(pair => {
+      const parts = pair.split(':');
+      if (parts.length !== 2) return;
+      const pid = parts[0].trim();
+      const v = parts[1].trim().toUpperCase();
+      if (!sumPuncte[pid]) sumPuncte[pid] = { DA: 0, NU: 0, ABTINERE: 0 };
+      if (v === 'DA') sumPuncte[pid].DA += shares;
+      else if (v === 'NU') sumPuncte[pid].NU += shares;
+      else if (v === 'ABTINERE') sumPuncte[pid].ABTINERE += shares;
     });
   });
 
-  // tabel acționari (rezumat)
-  let rowsAcc="";
-  actionari.slice().sort((a,b)=>a.nume.localeCompare(b.nume,'ro')).forEach((a,i)=>{
-    const type=classifyType(a);
-    const present=a.prezent;
-    let voted=false;
-    if(type==="coresp" || type==="procuraSpeciala"){
-      voted=!!(a.instructiuni && a.instructiuni.trim());
-    }else if(votedTokens.has(a.token)){
-      voted=true;
-    }else if(a.procura){
-      const rep = actionari.find(x=>x.nume===a.procura);
-      if(rep && votedTokens.has(rep.token) && type==="procuraGenerala") voted=true;
-    }
-    rowsAcc+=`
-      <tr>
-        <td>${i+1}</td>
-        <td>${a.nume}</td>
-        <td>${a.actiuni}</td>
-        <td>${pct(a.actiuni,total)}</td>
-        <td>${tipAfisaj(a)}</td>
-        <td>${present?'DA':'NU'}</td>
-        <td>${voted?'DA':'NU'}</td>
-      </tr>`;
-  });
+  // 6) Tabel Acționari (rezumat)
+  let rowsAcc = "";
+  actionari
+    .slice()
+    .sort((a, b) => a.nume.localeCompare(b.nume, 'ro'))
+    .forEach((a, i) => {
+      const type = classifyType(a);
+      const present = a.prezent;
 
-  // tabel puncte – cu Rezultat (Admis / Respins)
-  let rowsPuncte="";
-  ordineZi.slice().sort((a,b)=>a.id-b.id).forEach(p=>{
-    const s=sumPuncte[p.id] || {DA:0,NU:0,ABTINERE:0};
-    const tot=s.DA+s.NU+s.ABTINERE;
-    const pDA=pct(s.DA,tot||1);
-    let rezultat="Respins";
-    if(tot>0){
-      const pval=(s.DA*100/(tot||1));
-      if(pval>50 && s.DA>s.NU) rezultat="Admis";
-    }
-    rowsPuncte+=`
-      <tr>
-        <td>${p.id}</td>
-        <td>${p.titlu}</td>
-        <td>${s.DA}</td>
-        <td>${s.NU}</td>
-        <td>${s.ABTINERE}</td>
-        <td>${pDA}</td>
-        <td>${rezultat}</td>
-      </tr>`;
-  });
+      let voted = false;
+      if (type === 'coresp' || type === 'procuraSpeciala') {
+        voted = !!(a.instructiuni && a.instructiuni.trim());
+      } else if (votedTokens && votedTokens.has && votedTokens.has(a.token)) {
+        // vot online direct
+        voted = true;
+      } else if (type === 'procuraGenerala' && a.procura) {
+        // mandant cu procură generală – se consideră votat dacă reprezentantul are vot
+        const rep = actionari.find(x => x.nume === a.procura);
+        if (rep && votedTokens && votedTokens.has && votedTokens.has(rep.token)) {
+          voted = true;
+        }
+      }
 
-  const body=`
+      rowsAcc += `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${a.nume}</td>
+          <td>${a.actiuni}</td>
+          <td>${pct(a.actiuni, total)}</td>
+          <td>${tipAfisaj(a)}</td>
+          <td>${present ? 'DA' : 'NU'}</td>
+          <td>${voted ? 'DA' : 'NU'}</td>
+        </tr>`;
+    });
+
+  // 7) Tabel puncte – DA/NU/ABȚINERE + Rezultat
+  let rowsPuncte = "";
+  ordineZi
+    .slice()
+    .sort((a, b) => a.id - b.id)
+    .forEach(p => {
+      const s = sumPuncte[p.id] || { DA: 0, NU: 0, ABTINERE: 0 };
+      const tot = s.DA + s.NU + s.ABTINERE;
+      const pDA = pct(s.DA, tot || 1);
+
+      let rezultat = "Respins";
+      if (tot > 0) {
+        const pval = (s.DA * 100 / (tot || 1));
+        if (pval > 50 && s.DA > s.NU) rezultat = "Admis";
+      }
+
+      rowsPuncte += `
+        <tr>
+          <td>${p.id}</td>
+          <td>${p.titlu}</td>
+          <td>${s.DA}</td>
+          <td>${s.NU}</td>
+          <td>${s.ABTINERE}</td>
+          <td>${pDA}</td>
+          <td>${rezultat}</td>
+        </tr>`;
+    });
+
+  // 8) Construim HTML pentru raport și îl trimitem în fereastră nouă + print
+  const body = `
     <header>
       <img src="logo_Destine-Holding_oficial-color.png" alt="Destine Holding">
       <div>
@@ -893,7 +938,9 @@ window.genereazaRaportVot = async function(){
           Destine Holding S.A.<br>
           Data ședinței: ${$('dataSedintei').value || '-'}<br>
           Sesiune: ${$('idSesiune').value || '-'}<br>
-          Fereastră vot: Data: ${$('dataSedintei').value || '-'}, Început vot: ${$('votStart').value || '-'}, Sfârșit vot: ${$('votEnd').value || '-'}
+          Fereastră vot: Data: ${$('dataSedintei').value || '-'},
+          Început vot: ${$('votStart').value || '-'},
+          Sfârșit vot: ${$('votEnd').value || '-'}
         </div>
       </div>
     </header>
@@ -901,8 +948,13 @@ window.genereazaRaportVot = async function(){
     <table>
       <thead>
         <tr>
-          <th>#</th><th>Nume acționar</th><th>Acțiuni</th><th>% din total</th>
-          <th>Tip vot</th><th>Prezent</th><th>Votat</th>
+          <th>#</th>
+          <th>Nume acționar</th>
+          <th>Acțiuni</th>
+          <th>% din total</th>
+          <th>Tip vot</th>
+          <th>Prezent</th>
+          <th>Votat</th>
         </tr>
       </thead>
       <tbody>${rowsAcc}</tbody>
@@ -911,91 +963,21 @@ window.genereazaRaportVot = async function(){
     <table>
       <thead>
         <tr>
-          <th>#</th><th>Punct</th><th>DA (acțiuni)</th><th>NU (acțiuni)</th>
-          <th>Abțineri (acțiuni)</th><th>% DA</th><th>Rezultat</th>
+          <th>#</th>
+          <th>Punct</th>
+          <th>DA (acțiuni)</th>
+          <th>NU (acțiuni)</th>
+          <th>Abțineri (acțiuni)</th>
+          <th>% DA</th>
+          <th>Rezultat</th>
         </tr>
       </thead>
       <tbody>${rowsPuncte}</tbody>
     </table>`;
+
   openReportWindow("Raport voturi AGA", body);
-}
+};
 
-/* ============ MOD VOTANT (sid + token) ============ */
-async function initVoter(sid,token){
-  const sref=doc(db,'sesiuni',sid);
-  const sdoc=await getDoc(sref);
-  if(!sdoc.exists()){
-    $('paginaStart').classList.remove('hidden');
-    $('paginaStart').innerHTML=`<h2>Votant</h2><p class="small">Link invalid sau sesiune indisponibilă.</p>`;
-    return;
-  }
-  const data=sdoc.data(); const acc=data.actionari||[];
-  const me=acc.find(x=>x.token===token);
-
-  $('paginaStart').classList.add('hidden');
-  $('organizator').classList.add('hidden');
-  $('votant').classList.remove('hidden');
-  $('votant').classList.add('fade-up');
-
-  if(!me){
-    $('helloVotant').innerHTML=`<b>Link invalid</b>`;
-    return;
-  }
-
-  await setDoc(doc(db,'sesiuni',sid,'presence',token),{
-    ts:Date.now(), nume:me.nume, actiuni:me.actiuni, tip:me.tip||'Online', reprezentatDe:me.procura||''
-  });
-
-  const type=classifyType(me);
-
-  if(type==="online"){
-    $('helloVotant').innerHTML=`Bun venit, <b>${me.nume}</b> • Acțiuni: <b>${me.actiuni}</b> • Tip: <b>Online</b>`;
-  }else if(type==="coresp"){
-    $('helloVotant').innerHTML=`Bun venit, <b>${me.nume}</b> • Tip: <b>Corespondență</b><br>
-      <span class="small">Votul dvs. a fost transmis prin corespondență conform instrucțiunilor depuse. Nu mai puteți modifica votul online.</span>`;
-  }else if(type==="procuraSpeciala"){
-    $('helloVotant').innerHTML=`Bun venit, <b>${me.nume}</b> • Tip: <b>Procura specială</b><br>
-      <span class="small">Votul dvs. este exprimat conform instrucțiunilor din procura specială. Nu mai puteți modifica votul online.</span>`;
-  }else if(type==="procuraGenerala"){
-    $('helloVotant').innerHTML=`Bun venit, <b>${me.nume}</b> • Tip: <b>Procura generală</b><br>
-      <span class="small">Votul dvs. se aplică și acționarilor pe care îi reprezentați prin procură generală.</span>`;
-  }
-
-  const q=(data.ordineZi||[]).slice().sort((a,b)=>a.id-b.id);
-  const host=$('listaIntrebari'); host.innerHTML="";
-  q.forEach(p=>{
-    const box=document.createElement('div'); box.className='card';
-    box.innerHTML=`
-      <h3>#${p.id}. ${p.titlu||'(fără titlu)'}</h3>
-      <div class="vote-options">
-        <label><input type="radio" name="q${p.id}" value="DA"> DA</label>
-        <label><input type="radio" name="q${p.id}" value="NU"> NU</label>
-        <label><input type="radio" name="q${p.id}" value="ABTINERE"> Abținere</label>
-      </div>
-      <p class="small">${p.majoritate||''} ${p.votSecret==='Da'?'• Vot secret':''}</p>`;
-    host.appendChild(box);
-  });
-
-  if(type==="coresp" || type==="procuraSpeciala"){
-    $('btnTrimiteVot').disabled=true;
-    $('btnTrimiteVot').style.background="#9ca3af";
-    $('statusVot').innerHTML=`<span class="badge info">Votul este deja exprimat conform documentelor depuse (corespondență / procură specială).</span>`;
-    window.trimiteVotul = function(){};
-    return;
-  }
-
-  window.trimiteVotul = async function(){
-    const rasp={};
-    q.forEach(p=>{
-      const sel=document.querySelector(`input[name="q${p.id}"]:checked`);
-      rasp[p.id]=sel?sel.value:"";
-    });
-    await setDoc(doc(db,'sesiuni',sid,'votes',token),{
-      ts:Date.now(), nume:me.nume, actiuni:me.actiuni, raspunsuri:rasp
-    });
-    $('statusVot').innerHTML=`<span class="badge ok">Vot înregistrat. Vă mulțumim!</span>`;
-    $('btnTrimiteVot').style.background="#22c55e";
-  };
 }
 
 /* ============ STARTUP ============ */
