@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Destine Holding S.A. – Program AGA V8.1.14 PROCURA GENERALĂ PERFECT FIX</title>
+<style>
+:root{
+  --blue:#003399; --blue2:#1f4bd6; --gray:#f6f8fc; --muted:#6b7280;
+  --ok:#22c55e; --warn:#ef4444; --accent:#f57c00;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  background:var(--gray);
+  color:#111;
+  font-family:Segoe UI,system-ui,-apple-system,Roboto,Arial,sans-serif;
+}
+header{
+  background:#fff;
+  border-bottom:4px solid var(--blue);
+  text-align:center;
+  padding:18px 12px;
+}
+header img{height:80px;display:block;margin:0 auto}
+h1{margin:10px 0 2px;color:var(--blue);font-size:26px}
+h3{margin:4px 0 0;color:#333;font-weight:500}
+h4{margin:4px 0 0;color:#444;font-weight:500;font-size:14px}
+.container{
+  max-width:1100px;
+  margin:16px auto;
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,.06);
+  padding:18px;
+  opacity:1;
+  transform:translateY(0);
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{font-size:13px;color:#374151;margin:6px 0 4px;display:block}
+input,select,textarea{
+  width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;
+  background:#fff;font-size:14px;
+}
+input[type="date"],input[type="time"]{padding:6px 8px}
+textarea{min-height:60px;resize:vertical}
+button{
+  appearance:none;border:0;border-radius:8px;
+  background:var(--blue);color:#fff;
+  padding:8px 12px;font-weight:600;cursor:pointer;font-size:13px;
+  transition:background .15s, transform .1s;
+}
+button.secondary{background:var(--blue);}
+button.ghost{
+  background:#fff;
+  border:1px solid #cbd5e1;
+  color:#111;
+}
+button:active{
+  background:var(--ok) !important;
+  transform:scale(0.97);
+}
+.btnbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+section+section{margin-top:16px}
+table{
+  width:100%;border-collapse:collapse;margin-top:10px;
+  border-radius:8px;overflow:hidden;
+}
+th,td{
+  padding:8px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px;
+}
+th{background:var(--blue);color:#fff;font-weight:600}
+tr:nth-child(even) td{background:#fafafa}
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:999px;
+  font-size:11px;
+}
+.badge.ok{background:#dcfce7;color:#065f46}
+.badge.abs{background:#fee2e2;color:#991b1b}
+.badge.info{background:#e0e7ff;color:#3730a3}
+.small{font-size:12px;color:#6b7280}
+.hidden{display:none}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-top:8px}
+.footerbar{
+  position:sticky;bottom:0;background:#fff;border-top:1px solid #e5e7eb;
+  padding:8px 12px;display:flex;justify-content:space-between;align-items:center;
+}
+.state-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;background:#9ca3af}
+.state-ok{background:#22c55e}
+.linkish{color:var(--blue2);text-decoration:underline;cursor:pointer}
+blockquote{margin:8px 0;background:#f1f5f9;border-left:4px solid #blue;padding:8px 10px;border-radius:6px}
+.center{text-align:center}
+.ordineTitlu{
+  background:#eef3ff;
+  border:1px solid #003399;
+  border-radius:6px;
+  font-weight:600;
+}
+.vote-options{
+  display:flex;
+  gap:10px;
+  margin-top:6px;
+}
+.vote-options label{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  margin:0;
+}
+
+/* Animatii elegante */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(18px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.fade-up{
+  animation:fadeUp 0.45s ease-out;
+}
+@keyframes fadeInSoft{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+.fade-soft{
+  animation:fadeInSoft 0.4s ease-out;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo_Destine-Holding_oficial-color.png" alt="Destine Holding S.A.">
+  <h1>Destine Holding S.A.</h1>
+  <h3>Program de vot online pentru Adunările Generale ale Acționarilor</h3>
+  <h4>Versiune V8.1.14 PROCURA GENERALĂ PERFECT FIX (Firestore online)</h4>
+</header>
+
+<!-- Pagina start – doar pentru organizator -->
+<div class="container hidden" id="paginaStart">
+  <h2>🔐 Autentificare organizator AGA</h2>
+  <p class="small">
+    Această interfață este destinată exclusiv Consiliului de Administrație / organizatorului AGA.
+    Acționarii accesează platforma numai prin linkurile nominale primite (e-mail / WhatsApp).
+  </p>
+  <div class="row">
+    <div>
+      <label>Introduceți parola de organizator</label>
+      <input id="parolaOrganizator" type="password" placeholder="Implicit: DH2026">
+    </div>
+    <div style="align-self:end">
+      <button onclick="verificaParola()">Intră ca organizator</button>
+      <button class="ghost" onclick="schimbaParola()">🔑 Schimbă parola</button>
+    </div>
+  </div>
+  <blockquote class="small">
+    După autentificare, veți putea:
+    <br>• încărca acționari și ordinea de zi,
+    <br>• genera linkuri personalizate de vot,
+    <br>• urmări prezența și voturile în timp real,
+    <br>• exporta rapoarte PDF pentru prezență și vot.
+  </blockquote>
+</div>
+
+<!-- Panou organizator -->
+<div class="container hidden" id="organizator">
+  <h2>⚙️ Setări AGA</h2>
+  <div class="row">
+    <div><label>Companie</label><input id="companie" value="Destine Holding S.A."></div>
+    <div><label>Data ședinței</label><input id="dataSedintei" type="date"></div>
+    <div><label>ID sesiune (ex: AGA_2025_DH)</label><input id="idSesiune" value="AGA_2025_DH"></div>
+    <div><label>Quorum minim (%)</label><input id="quorumMinim" type="number" value="50"></div>
+  </div>
+  <div class="row">
+    <div><label>Ora început vot</label><input id="votStart" type="time" value="11:00"></div>
+    <div><label>Ora sfârșit vot</label><input id="votEnd" type="time" value="16:00"></div>
+  </div>
+
+  <section>
+    <h3>👤 Acționari & Prezență</h3>
+    <div class="btnbar">
+      <button onclick="importaActionari()">📥 Importă acționari (CSV)</button>
+      <button onclick="exportaActionari()">📤 Exportă acționari</button>
+      <button onclick="genereazaTokenuri()">🔗 Generează tokenuri</button>
+      <button onclick="marcheazaTotiPrezenti()">Marchează toți prezenți</button>
+      <button onclick="golestePrezența()">Golește prezența</button>
+    </div>
+    <table>
+      <thead><tr>
+        <th>#</th><th>Nume</th><th>Acțiuni</th><th>Tip participare</th><th>Procură</th>
+        <th>Prezență</th><th>Status vot</th><th>Token</th><th>Link</th><th>WhatsApp</th><th>Email</th>
+      </tr></thead>
+      <tbody id="listaActionari"></tbody>
+    </table>
+    <p id="totalActiuni" class="small"></p>
+    <div class="btnbar">
+      <button onclick="publicaSesiune()">🌐 Publică online (Firestore)</button>
+      <button onclick="conecteazaLive()">📡 Conectare / Reîmprospătare live</button>
+      <button id="btnPresence" onclick="afiseazaPrezenta()">👁️ Afișează prezența</button>
+      <button onclick="genereazaRaportPrezenta()">📄 Raport prezență (PDF)</button>
+    </div>
+    <div id="boxPrezenta" class="card hidden"></div>
+  </section>
+
+  <section>
+    <h3>🗓️ Ordinea de zi</h3>
+    <div class="btnbar">
+      <button onclick="importaOrdine()">📥 Importă Ordinea de zi (CSV)</button>
+      <button onclick="exportaOrdine()">📤 Exportă Ordinea de zi</button>
+      <button onclick="adaugaPunct()">➕ Adaugă punct</button>
+    </div>
+    <div id="ordineContainer"></div>
+  </section>
+
+  <section>
+    <h3>🧾 Export & copii</h3>
+    <div class="btnbar">
+      <button onclick="genereazaRaportVot()">🖨️ Raport voturi (PDF)</button>
+      <button onclick="salveazaLocal()">💾 Salvează local</button>
+      <button onclick="incarcaDinCopie()">📂 Încarcă din copie</button>
+      <button onclick="resetTotal()">♻️ Reset total</button>
+    </div>
+  </section>
+</div>
+
+<!-- Panou votant -->
+<div class="container hidden" id="votant">
+  <h2>🗳️ Vot AGA</h2>
+  <p id="helloVotant" class="small"></p>
+  <div id="listaIntrebari"></div>
+  <div class="btnbar">
+    <button id="btnTrimiteVot" class="secondary" onclick="trimiteVotul()">Trimite votul</button>
+  </div>
+  <p id="statusVot" class="small"></p>
+</div>
+
+<!-- Bara de stare -->
+<div class="footerbar">
+  <div><span id="dot" class="state-dot"></span><b id="fireState">Neconectat la Firestore</b></div>
+  <div class="small" id="liveCounters">Conectați (prezență): 0 | Voturi primite: 0</div>
+</div>
+
+<script type="module">
+/* ============ FIREBASE CONFIG ============ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, doc, setDoc, getDoc, collection, onSnapshot, getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDbVELVBtmoS1m0761QQ2kI5Cvsjc4cjwc",
+  authDomain: "destineaga.firebaseapp.com",
+  projectId: "destineaga",
+  storageBucket: "destineaga.firebasestorage.app",
+  messagingSenderId: "997907169795",
+  appId: "1:997907169795:web:e06e62d522a13b01e48436",
+  measurementId: "G-CS7C7LQVD5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+document.getElementById('dot').classList.add('state-ok');
+document.getElementById('fireState').innerText = "🟢 Conectat la Firestore – DestineAGA";
+
+/* ============ STARE GLOBALĂ ============ */
+let parolaCorecta = localStorage.getItem("parolaAGA") || "DH2026";
+let actionari = [];
+let ordineZi  = [];
+let liveUnsubs = {presence:null, votes:null};
+let presentTokens = new Set();
+let votedTokens   = new Set();
+
+const $ = id => document.getElementById(id);
+const pct = (x,tot)=>tot?( (x*100/tot).toFixed(2)+"%" ):"0.00%";
+const toast = m => alert(m);
+const normalizeName = n => (n||"").toString().trim().replace(/^"+|"+$/g, "");
+
+/* Asigură că toți acționarii au token + link generat (fără a rescrie ce există deja) */
+function ensureTokensAndLinks(){
+  let changed = false;
+  actionari.forEach(a=>{
+    if(!a.token || !a.token.toString().trim()){
+      a.token = Math.random().toString(36).slice(2,8);
+      changed = true;
+    }
+    if((!a.link || !a.link.toString().trim()) && a.token){
+      a.link = buildVoterLink(a.token);
+      changed = true;
+    }
+  });
+  if(changed){
+    actualizeazaTabelActionari();
+    toast("Tokenurile lipsă au fost generate automat.");
+  }
+}
+
+
+/* Clasificare tip participare */
+function classifyType(a){
+  const t=(a.tip||"").toLowerCase().trim();
+  const hasInstr=a.instructiuni && a.instructiuni.trim()!=="";  
+
+  // Corespondență (acceptăm forme gen "corespondenta", "corespondenta")
+  if(t.startsWith("coresp") || t.startsWith("corespond")) return "coresp";
+
+  // Procura (generală / specială)
+  if(t.startsWith("procura")){
+    return hasInstr ? "procuraSpeciala" : "procuraGenerala";
+  }
+
+  // Dacă coloana Tip nu e completă, dar are Procură => tratare ca procură
+  if(a.procura){
+    return hasInstr ? "procuraSpeciala" : "procuraGenerala";
+  }
+
+  return "online";
+}
+function tipAfisaj(a){
+  const t=classifyType(a);
+  if(t==="coresp") return "Corespondență";
+  if(t==="procuraGenerala") return "Procura (generală)";
+  if(t==="procuraSpeciala") return "Procura specială";
+  return "Online";
+}
+function buildVoterLink(token){
+  const base = window.location.origin + window.location.pathname;
+  return `${base}?sid=${encodeURIComponent($('idSesiune').value)}&t=${encodeURIComponent(token)}`;
+}
+function openReportWindow(title, bodyHtml){
+  const w = window.open('', '_blank');
+  if(!w){ alert("Permiteți ferestre pop-up pentru raport."); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>${title}</title>
+    <style>
+      body{font-family:Segoe UI,system-ui,-apple-system,Roboto,Arial,sans-serif;
+           padding:20px;color:#111;}
+      h1,h2,h3{color:#003399;margin:0 0 10px;}
+      .small{font-size:12px;color:#6b7280;margin-bottom:10px;}
+      table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;}
+      th,td{border:1px solid #e5e7eb;padding:6px;text-align:left;}
+      th{background:#003399;color:#fff;}
+      tr:nth-child(even) td{background:#f9fafb;}
+      .badge{display:inline-block;padding:2px 6px;border-radius:999px;font-size:10px;}
+      .ok{background:#dcfce7;color:#166534;}
+      .abs{background:#fee2e2;color:#991b1b;}
+      header{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+      header img{height:50px;}
+      @media print{
+        body{padding:0;margin:0;}
+      }
+    </style>
+  </head><body>${bodyHtml}</body></html>`);
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+/* ============ AUTENTIFICARE ============ */
+window.verificaParola = function(){
+  const p = $('parolaOrganizator').value.trim();
+  if(p===parolaCorecta){
+    $('paginaStart').classList.add('hidden');
+    $('organizator').classList.remove('hidden');
+    $('organizator').classList.add('fade-up');
+    if(!$('dataSedintei').value){
+      const d=new Date(), z=n=>String(n).padStart(2,'0');
+      $('dataSedintei').value=`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+    }
+    actualizeazaTabelActionari();
+    afiseazaOrdine();
+  } else toast("Parolă incorectă!");
+};
+window.schimbaParola = function(){
+  const noua = prompt("Introduceți noua parolă:");
+  if(noua && noua.trim()){
+    parolaCorecta = noua.trim();
+    localStorage.setItem("parolaAGA", parolaCorecta);
+    toast("Parola a fost schimbată.");
+  }
+};
+
+/* ============ ACȚIONARI ============ */
+window.importaActionari = function(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.csv';
+  input.onchange=e=>{
+    const f=e.target.files[0]; const r=new FileReader();
+    r.onload=ev=>{
+      const rows=ev.target.result.split(/\r?\n/).map(l=>l.split(','));
+      rows.shift();
+      actionari = rows.filter(r=>r[0] && r[0].trim()).map(r=>{
+        const rawProc = (r[4]||"");
+        const cleanProc = normalizeName(rawProc);
+        return {
+          nume:(r[0]||"").trim(),
+          actiuni:Number(r[1]||0),
+          telefon:(r[2]||"").trim(),
+          email:(r[3]||"").trim(),
+          procura:cleanProc,
+          instructiuni:(r[5]||"").trim(),
+          tip:(r[6]||"Online").trim(),
+          token:"",
+          link:"",
+          prezent:false
+        };
+      });
+      recomputePresenceFromTokens();
+      actualizeazaTabelActionari();
+      toast("Acționari importați.");
+    };
+    r.readAsText(f,'UTF-8');
+  };
+  input.click();
+};
+window.exportaActionari = function(){
+  let csv="Nume,Actiuni,Telefon,Email,ProcuraPentru,InstructiuniVot,Tip,Token,Link\n";
+  actionari.forEach(a=>{
+    csv+=`${a.nume},${a.actiuni},${a.telefon},${a.email},${a.procura},${a.instructiuni},${a.tip},${a.token},${a.link}\n`;
+  });
+  const blob=new Blob([csv],{type:"text/csv"}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download="actionari_export.csv"; a.click();
+};
+window.genereazaTokenuri = function(){
+  ensureTokensAndLinks();
+  toast("Tokenurile au fost generate / completate.");
+};
+window.marcheazaTotiPrezenti = function(){
+  actionari.forEach(a=>a.prezent=true);
+  actualizeazaTabelActionari();
+};
+window.golestePrezența = function(){
+  actionari.forEach(a=>a.prezent=false);
+  actualizeazaTabelActionari();
+};
+
+/* Prezență din tokenuri + reprezentanți */
+function recomputePresenceFromTokens(){
+  const repPresent = {};
+  actionari.forEach(a=>{
+    const tokenPresent = presentTokens.has(a.token);
+    if(tokenPresent || a.prezent){
+      repPresent[normalizeName(a.nume)] = true;
+    }
+  });
+  actionari.forEach(a=>{
+    const t=classifyType(a);
+    let present=false;
+    const tokenPresent = presentTokens.has(a.token);
+    const repName = normalizeName(a.procura);
+    if(t==="coresp"){
+      present = true;
+    }else if(repName && repPresent[repName]){
+      present = true;
+    }else if(tokenPresent || a.prezent){
+      present = true;
+    }
+    a.prezent = present;
+  });
+}
+
+function actualizeazaTabelActionari(){
+  const tb=$('listaActionari'); tb.innerHTML="";
+  actionari.sort((a,b)=>a.nume.localeCompare(b.nume,'ro'));
+  let total=0;
+  const repHasVoted = {};
+  actionari.forEach(a=>{
+    if(votedTokens.has(a.token)){
+      repHasVoted[normalizeName(a.nume)]=true;
+    }
+  });
+
+  actionari.forEach((a,i)=>{
+    total+=Number(a.actiuni||0);
+    const type=classifyType(a);
+    const present = a.prezent;
+    let voted = false;
+    const repName = normalizeName(a.procura);
+    if(type==="coresp" || type==="procuraSpeciala"){
+      voted = !!(a.instructiuni && a.instructiuni.trim());
+    }else if(votedTokens.has(a.token)){
+      voted = true;
+    }else if(repName && repHasVoted[repName] && type==="procuraGenerala"){
+      voted = true;
+    }
+    const prezHtml = present?'<span class="badge ok">Prezent</span>':'<span class="badge abs">Absent</span>';
+    const votHtml  = voted?'<span class="badge ok">Votat</span>':'<span class="badge abs">Nevotat</span>';
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><b>${a.nume}</b></td>
+      <td>${a.actiuni}</td>
+      <td>${tipAfisaj(a)}</td>
+      <td>${a.procura||'-'}</td>
+      <td>${prezHtml}</td>
+      <td>${votHtml}</td>
+      <td>${a.token||'-'}</td>
+      <td>${a.link ? `<button class="secondary copyBtn" data-link="${a.link}">Copiază</button>` : '-'}</td>
+      <td>${a.link ? `<button class="secondary waBtn" data-index="${i}">WA</button>` : '-'}</td>
+      <td>${a.link ? `<button class="secondary mailBtn" data-index="${i}">Mail</button>` : '-'}</td>`;
+    tb.appendChild(tr);
+  });
+  $('totalActiuni').innerText=`Total acțiuni: ${total} • Acționari: ${actionari.length}`;
+  updateLiveBar();
+}
+
+/* Copy / WA / Mail – handler global */
+document.addEventListener('click', e=>{
+  if(e.target.classList.contains('copyBtn')){
+    const link=e.target.dataset.link;
+    navigator.clipboard.writeText(link).then(()=>{
+      e.target.style.background="#22c55e";
+      e.target.textContent="Copiat";
+    });
+  }
+  if(e.target.classList.contains('waBtn')){
+    const idx=Number(e.target.dataset.index);
+    const a=actionari[idx];
+    if(!a.token || !a.link){
+      ensureTokensAndLinks();
+    }
+    const text=`Bună ziua, ${a.nume}!\nLink vot AGA Destine Holding: ${a.link}\nVă rugăm să votați în intervalul comunicat.`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+    e.target.style.background="#22c55e";
+  }
+  if(e.target.classList.contains('mailBtn')){
+    const idx=Number(e.target.dataset.index);
+    const a=actionari[idx];
+    if(!a.token || !a.link){
+      ensureTokensAndLinks();
+    }
+    if(!a.email || !a.email.toString().trim()){
+      toast("Acționarul nu are email completat.");
+      return;
+    }
+    const sub=`Link vot AGA – Destine Holding S.A. – ${$('dataSedintei').value||''}`;
+    const body=`Stimată/Stimate ${a.nume},%0D%0A%0D%0AVă transmitem linkul personal pentru exercitarea votului:%0D%0A${a.link}%0D%0A%0D%0AVă rugăm să votați în fereastra stabilită.%0D%0AMulțumim!`;
+    window.open(`mailto:${encodeURIComponent(a.email)}?subject=${encodeURIComponent(sub)}&body=${body}`,'_blank');
+    e.target.style.background="#22c55e";
+  }
+});
+
+/* ============ ORDINE DE ZI ============ */
+window.importaOrdine = function(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.csv';
+  input.onchange=e=>{
+    const f=e.target.files[0]; const r=new FileReader();
+    r.onload=ev=>{
+      const rows=ev.target.result.split(/\r?\n/).map(x=>x.split(','));
+      rows.shift();
+      ordineZi = rows.filter(r=>r[0] && r[0].trim()).map((r,i)=>({
+        id:i+1,
+        titlu:(r[0]||"").trim(),
+        majoritate:r[1]||"Majoritate simplă (>50%)",
+        votSecret:r[2]||"Nu",
+        observatii:r[3]||""
+      }));
+      afiseazaOrdine();
+      toast("Ordinea de zi importată.");
+    };
+    r.readAsText(f,'UTF-8');
+  };
+  input.click();
+};
+window.exportaOrdine = function(){
+  let csv="Titlu,Majoritate,VotSecret,Observatii\n";
+  ordineZi.forEach(p=>csv+=`${p.titlu},${p.majoritate},${p.votSecret},${p.observatii}\n`);
+  const blob=new Blob([csv],{type:"text/csv"}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download="ordine_zi_export.csv"; a.click();
+};
+window.adaugaPunct = function(){
+  const id=ordineZi.length+1;
+  ordineZi.push({id,titlu:`Punct ${id}`,majoritate:"Majoritate simplă (>50%)",votSecret:"Nu",observatii:""});
+  afiseazaOrdine();
+};
+function afiseazaOrdine(){
+  const c=$('ordineContainer'); c.innerHTML="";
+  ordineZi.forEach(p=>{
+    const div=document.createElement('div'); div.className="card";
+    div.innerHTML=`
+      <label>Punct #${p.id} – Titlu</label>
+      <input class="ordineTitlu" value="${p.titlu}" oninput="ordineZi[${p.id-1}].titlu=this.value">
+      <label>Majoritate</label>
+      <input value="${p.majoritate}" oninput="ordineZi[${p.id-1}].majoritate=this.value">
+      <label>Vot secret</label>
+      <select oninput="ordineZi[${p.id-1}].votSecret=this.value">
+        <option ${p.votSecret==="Nu"?"selected":""}>Nu</option>
+        <option ${p.votSecret==="Da"?"selected":""}>Da</option>
+      </select>
+      <label>Observații</label>
+      <textarea oninput="ordineZi[${p.id-1}].observatii=this.value">${p.observatii}</textarea>`;
+    c.appendChild(div);
+  });
+}
+
+/* ============ PUBLICARE & LIVE (FIRESTORE) ============ */
+window.publicaSesiune = async function(){
+  const sid=$('idSesiune').value.trim(); if(!sid){toast("Completați ID sesiune.");return;}
+  // ne asigurăm că fiecare acționar are token + link înainte de publicare
+  ensureTokensAndLinks();
+  const payload={
+    companie:$('companie').value,
+    data:$('dataSedintei').value,
+    quorum:Number($('quorumMinim').value||0),
+    votStart:$('votStart').value,
+    votEnd:$('votEnd').value,
+    actionari, ordineZi, createdAt:Date.now()
+  };
+  await setDoc(doc(db,'sesiuni',sid),payload);
+  toast("✅ Sesiunea a fost publicată online.");
+  conecteazaLive();
+};
+window.conecteazaLive = function(){
+  const sid=$('idSesiune').value.trim(); if(!sid){toast("Completați ID sesiune.");return;}
+  presentTokens.clear(); votedTokens.clear();
+  if(liveUnsubs.presence) liveUnsubs.presence();
+  liveUnsubs.presence = onSnapshot(collection(db,'sesiuni',sid,'presence'),snap=>{
+    presentTokens.clear(); snap.forEach(d=>presentTokens.add(d.id));
+    recomputePresenceFromTokens();
+    actualizeazaTabelActionari();
+  });
+  if(liveUnsubs.votes) liveUnsubs.votes();
+  liveUnsubs.votes = onSnapshot(collection(db,'sesiuni',sid,'votes'),snap=>{
+    votedTokens.clear(); snap.forEach(d=>votedTokens.add(d.id));
+    actualizeazaTabelActionari();
+  });
+  $('fireState').innerText=`🟢 Live: ${sid}`;
+};
+
+function updateLiveBar(){
+  const prez = actionari.filter(a=>a.prezent).length;
+  const repHasVoted = {};
+  actionari.forEach(a=>{
+    if(votedTokens.has(a.token)){
+      repHasVoted[normalizeName(a.nume)]=true;
+    }
+  });
+  let votCount=0;
+  actionari.forEach(a=>{
+    const type=classifyType(a);
+    let voted=false;
+    const repName = normalizeName(a.procura);
+    if(type==="coresp" || type==="procuraSpeciala"){
+      voted=!!(a.instructiuni && a.instructiuni.trim());
+    }else if(votedTokens.has(a.token)){
+      voted=true;
+    }else if(repName && repHasVoted[repName] && type==="procuraGenerala"){
+      voted=true;
+    }
+    if(voted) votCount++;
+  });
+  $('liveCounters').innerText=`Conectați (prezență): ${prez} | Voturi primite: ${votCount}`;
+}
+
+/* ============ PREZENȚĂ – TABEL & RAPORT ============ */
+window.afiseazaPrezenta = function(){
+  $('btnPresence').style.background="#22c55e";
+  $('boxPrezenta').classList.remove('hidden');
+  $('boxPrezenta').classList.add('fade-soft');
+  renderPrezentaBox();
+};
+function renderPrezentaBox(){
+  const total=actionari.reduce((s,a)=>s+Number(a.actiuni||0),0);
+  const prezente = actionari.filter(a=>a.prezent);
+  const actPrez = prezente.reduce((s,a)=>s+Number(a.actiuni||0),0);
+  const cvor=Number($('quorumMinim').value||0);
+  const atins=(actPrez*100/Math.max(total,1))>=cvor;
+  const rows = actionari.slice().sort((a,b)=>a.nume.localeCompare(b.nume,'ro')).map(a=>{
+    const st=a.prezent?'<span class="badge ok">Prezent</span>':'<span class="badge abs">Absent</span>';
+    const type=classifyType(a);
+    let voted=false;
+    if(type==="coresp" || type==="procuraSpeciala"){
+      voted=!!(a.instructiuni && a.instructiuni.trim());
+    }else if(votedTokens.has(a.token)){
+      voted=true;
+    }else{
+      const repName = normalizeName(a.procura);
+      const repV = actionari.find(x=> normalizeName(x.nume)===repName && votedTokens.has(x.token));
+      if(repV && type==="procuraGenerala") voted=true;
+    }
+    const vs=voted?'<span class="badge ok">Votat</span>':'<span class="badge abs">Nevotat</span>';
+    const obs=a.procura?('Reprezentat de '+normalizeName(a.procura)):'';
+    return `<tr>
+      <td>${a.nume}</td>
+      <td>${a.actiuni}</td>
+      <td>${pct(a.actiuni,total)}</td>
+      <td>${tipAfisaj(a)}</td>
+      <td>${st}</td>
+      <td>${vs}</td>
+      <td>${obs}</td>
+    </tr>`;
+  }).join('');
+  $('boxPrezenta').innerHTML=`
+    <h3>Prezență curentă</h3>
+    <p class="small">
+      Total acțiuni: ${total} • Prezente: ${actPrez} (${pct(actPrez,total)}) •
+      Acționari prezenți: ${prezente.length} / ${actionari.length} •
+      Cvorum minim: ${cvor}% • Cvorum atins: ${atins?'<b style="color:#065f46">DA</b>':'<b style="color:#991b1b">NU</b>'}
+    </p>
+    <table>
+      <thead>
+        <tr><th>Nume</th><th>Acțiuni</th><th>% total</th><th>Tip</th><th>Prezență</th><th>Vot</th><th>Observații</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+window.genereazaRaportPrezenta = function(){
+  const total=actionari.reduce((s,a)=>s+Number(a.actiuni||0),0);
+  const prezente = actionari.filter(a=>a.prezent);
+  const actPrez = prezente.reduce((s,a)=>s+Number(a.actiuni||0),0);
+  const cvor=Number($('quorumMinim').value||0);
+  const atins=(actPrez*100/Math.max(total,1))>=cvor;
+  let rows="";
+  actionari.slice().sort((a,b)=>a.nume.localeCompare(b.nume,'ro')).forEach((a,i)=>{
+    const st=a.prezent?'<span class="badge ok">Prezent</span>':'<span class="badge abs">Absent</span>';
+    const type=classifyType(a);
+    let voted=false;
+    if(type==="coresp" || type==="procuraSpeciala"){
+      voted=!!(a.instructiuni && a.instructiuni.trim());
+    }else if(votedTokens.has(a.token)){
+      voted=true;
+    }else{
+      const repName = normalizeName(a.procura);
+      const repV = actionari.find(x=> normalizeName(x.nume)===repName && votedTokens.has(x.token));
+      if(repV && type==="procuraGenerala") voted=true;
+    }
+    const vs=voted?'<span class="badge ok">Votat</span>':'<span class="badge abs">Nevotat</span>';
+    const obs=a.procura?('Reprezentat de '+normalizeName(a.procura)):'';
+    rows+=`
+      <tr>
+        <td>${i+1}</td>
+        <td>${a.nume}</td>
+        <td>${a.actiuni}</td>
+        <td>${pct(a.actiuni,total)}</td>
+        <td>${tipAfisaj(a)}</td>
+        <td>${st}</td>
+        <td>${vs}</td>
+        <td>${obs}</td>
+      </tr>`;
+  });
+  const body=`
+    <header>
+      <img src="logo_Destine-Holding_oficial-color.png" alt="Destine Holding">
+      <div>
+        <h1>Raport prezență AGA</h1>
+        <div class="small">
+          Destine Holding S.A.<br>
+          Data ședinței: ${$('dataSedintei').value || '-'}<br>
+          Sesiune: ${$('idSesiune').value || '-'}<br>
+          Fereastră vot: Data: ${$('dataSedintei').value || '-'}, Început vot: ${$('votStart').value || '-'}, Sfârșit vot: ${$('votEnd').value || '-'}
+        </div>
+      </div>
+    </header>
+    <h3>Sinteză prezență</h3>
+    <p class="small">
+      Total acțiuni: ${total} • Prezente: ${actPrez} (${pct(actPrez,total)})<br>
+      Acționari prezenți: ${prezente.length} / ${actionari.length}<br>
+      Cvorum minim: ${cvor}% • Cvorum atins: ${atins?'DA':'NU'}
+    </p>
+    <h3>Detaliu acționari</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Nume</th><th>Acțiuni</th><th>% total</th>
+          <th>Tip prezență</th><th>Prezență</th><th>Vot</th><th>Observații</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  openReportWindow("Raport prezență AGA", body);
+}
+
+/* ============ SALVARE LOCALĂ & RESET ============ */
+window.salveazaLocal = function(){
+  const data={
+    companie:$('companie').value,
+    data:$('dataSedintei').value,
+    quorum:$('quorumMinim').value,
+    idSesiune:$('idSesiune').value,
+    votStart:$('votStart').value,
+    votEnd:$('votEnd').value,
+    actionari, ordineZi
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=`AGA_backup_${Date.now()}.json`; a.click();
+};
+window.incarcaDinCopie = function(){
+  const input=document.createElement('input'); input.type='file'; input.accept='.json';
+  input.onchange=e=>{
+    const f=e.target.files[0]; const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const d=JSON.parse(ev.target.result);
+        $('companie').value=d.companie||'Destine Holding S.A.';
+        $('dataSedintei').value=d.data||d.dataSedintei||'';
+        $('quorumMinim').value=d.quorum||'50';
+        $('idSesiune').value=d.idSesiune||'AGA_2025_DH';
+        $('votStart').value=d.votStart||'11:00';
+        $('votEnd').value=d.votEnd||'16:00';
+        actionari=d.actionari||[]; ordineZi=d.ordineZi||[];
+        recomputePresenceFromTokens();
+        actualizeazaTabelActionari(); afiseazaOrdine();
+        // completăm automat tokenurile / linkurile lipsă după restaurare
+        ensureTokensAndLinks();
+        toast("Date restaurate.");
+      }catch(_){toast("Restaurare eșuată.");}
+    };
+    r.readAsText(f,'UTF-8');
+  };
+  input.click();
+};
+window.resetTotal = function(){
+  if(confirm("Sigur doriți resetarea completă a sesiunii AGA?")){
+    localStorage.clear();
+    actionari=[]; ordineZi=[];
+    location.reload();
+  }
+};
+
+/* ============ RAPORT VOTURI (PDF) – PROCURA GENERALĂ FIX ============ */
+window.genereazaRaportVot = async function () {
+  const sid = $('idSesiune').value.trim();
+  if (!sid) {
+    toast("Completați ID sesiune înainte de raport vot.");
+    return;
+  }
+
+  const total = actionari.reduce((s, a) => s + Number(a.actiuni || 0), 0);
+
+  // map token -> acționar
+  const byToken = {};
+  actionari.forEach(a => {
+    if (a.token) byToken[a.token] = a;
+  });
+
+  // reprezentant -> listă mandanți cu procură generală
+  const representedBy = {};
+  actionari.forEach(a => {
+    const t = classifyType(a);
+    const repName = normalizeName(a.procura);
+    if (t === "procuraGenerala" && repName) {
+      if (!representedBy[repName]) representedBy[repName] = [];
+      representedBy[repName].push(a);
+    }
+  });
+
+  // blocuri de acțiuni: reprezentant + mandanți prin procură generală
+  const repShares = {};
+  actionari.forEach(a => {
+    const name = normalizeName(a.nume);
+    let shares = Number(a.actiuni || 0);
+    const reps = representedBy[name];
+    if (reps) {
+      reps.forEach(m => {
+        shares += Number(m.actiuni || 0);
+      });
+    }
+    repShares[name] = shares;
+  });
+
+  // init sume pe puncte
+  const sumPuncte = {};
+  ordineZi.forEach(p => {
+    sumPuncte[p.id] = { DA: 0, NU: 0, ABTINERE: 0 };
+  });
+
+  // 1) VOTURI ONLINE (delegat + online simpli)
+  const vsnap = await getDocs(collection(db, 'sesiuni', sid, 'votes'));
+  vsnap.forEach(docv => {
+    const token = docv.id;
+    const data = docv.data();
+    const a = byToken[token];
+    if (!a) return;
+
+    const type = classifyType(a);
+
+    // corespondență și procură specială NU sunt online
+    if (type === 'coresp' || type === 'procuraSpeciala') return;
+
+    // online simplu sau reprezentant cu procură generală
+    let shares = repShares[a.nume] != null
+      ? repShares[a.nume]
+      : Number(a.actiuni || 0);
+
+    const rasp = data.raspunsuri || {};
+    Object.keys(rasp).forEach(qid => {
+      const v = (rasp[qid] || '').toUpperCase();
+      if (!sumPuncte[qid]) sumPuncte[qid] = { DA: 0, NU: 0, ABTINERE: 0 };
+      if (v === 'DA') sumPuncte[qid].DA += shares;
+      else if (v === 'NU') sumPuncte[qid].NU += shares;
+      else if (v === 'ABTINERE') sumPuncte[qid].ABTINERE += shares;
+    });
+  });
+
+  // 2) VOTURI OFFLINE (corespondență + procură specială) din InstrucțiuniVot
+  // Regula V8.1.14: dacă un acționar are mai puține instrucțiuni decât numărul de puncte,
+  // punctele lipsă se consideră automat ABȚINERE.
+  actionari.forEach(a => {
+    const type = classifyType(a);
+    if (type !== 'coresp' && type !== 'procuraSpeciala') return;
+
+    const shares = Number(a.actiuni || 0);
+
+    // Construim un map { punctId: vot } din instrucțiunile text
+    const instr = {};
+    if (a.instructiuni && a.instructiuni.trim()) {
+      const pairs = a.instructiuni.split(';');
+      pairs.forEach(pair => {
+        const parts = pair.split(':');
+        if (parts.length === 2) {
+          const pid = parts[0].trim();
+          const v = parts[1].trim().toUpperCase();
+          if (pid) instr[pid] = v;
+        }
+      });
+    }
+
+    // Parcurgem TOATE punctele din ordinea de zi;
+    // unde nu există instrucțiune explicită -> ABTINERE
+    ordineZi.forEach(p => {
+      const pid = p.id.toString();
+      const v = instr[pid] || "ABTINERE";
+
+      if (!sumPuncte[pid]) {
+        sumPuncte[pid] = { DA: 0, NU: 0, ABTINERE: 0 };
+      }
+
+      if (v === 'DA') sumPuncte[pid].DA += shares;
+      else if (v === 'NU') sumPuncte[pid].NU += shares;
+      else sumPuncte[pid].ABTINERE += shares;
+    });
+  });
+
+  // 3) Tabel acționari (rezumat)
+  const repHasVoted = {};
+  actionari.forEach(a => {
+    if (votedTokens.has(a.token)) {
+      repHasVoted[normalizeName(a.nume)] = true;
+    }
+  });
+
+  let rowsAcc = "";
+  actionari
+    .slice()
+    .sort((a, b) => a.nume.localeCompare(b.nume, 'ro'))
+    .forEach((a, i) => {
+      const type = classifyType(a);
+      const present = a.prezent;
+
+      let voted = false;
+      const repName = normalizeName(a.procura);
+      if (type === 'coresp' || type === 'procuraSpeciala') {
+        voted = !!(a.instructiuni && a.instructiuni.trim());
+      } else if (votedTokens.has(a.token)) {
+        voted = true;
+      } else if (type === 'procuraGenerala' && repName && repHasVoted[repName]) {
+        // mandant cu procură generală, considerat votat dacă reprezentantul a votat
+        voted = true;
+      }
+
+      rowsAcc += `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${a.nume}</td>
+          <td>${a.actiuni}</td>
+          <td>${pct(a.actiuni, total)}</td>
+          <td>${tipAfisaj(a)}</td>
+          <td>${present ? 'DA' : 'NU'}</td>
+          <td>${voted ? 'DA' : 'NU'}</td>
+        </tr>`;
+    });
+
+  // 4) Tabel puncte – DA/NU/Abțineri + Rezultat
+  let rowsPuncte = "";
+  ordineZi
+    .slice()
+    .sort((a, b) => a.id - b.id)
+    .forEach(p => {
+      const s = sumPuncte[p.id] || { DA: 0, NU: 0, ABTINERE: 0 };
+      const tot = s.DA + s.NU + s.ABTINERE;
+      const pDA = pct(s.DA, tot || 1);
+
+      let rezultat = "Respins";
+      if (tot > 0) {
+        const pval = (s.DA * 100 / (tot || 1));
+        if (pval > 50 && s.DA > s.NU) rezultat = "Admis";
+      }
+
+      rowsPuncte += `
+        <tr>
+          <td>${p.id}</td>
+          <td>${p.titlu}</td>
+          <td>${s.DA}</td>
+          <td>${s.NU}</td>
+          <td>${s.ABTINERE}</td>
+          <td>${pDA}</td>
+          <td>${rezultat}</td>
+        </tr>`;
+    });
+
+  // 5) HTML raport + print
+  const body = `
+    <header>
+      <img src="logo_Destine-Holding_oficial-color.png" alt="Destine Holding">
+      <div>
+        <h1>Raport voturi AGA</h1>
+        <div class="small">
+          Destine Holding S.A.<br>
+          Data ședinței: ${$('dataSedintei').value || '-'}<br>
+          Sesiune: ${$('idSesiune').value || '-'}<br>
+          Fereastră vot: Data: ${$('dataSedintei').value || '-'},
+          Început vot: ${$('votStart').value || '-'},
+          Sfârșit vot: ${$('votEnd').value || '-'}
+        </div>
+      </div>
+    </header>
+    <h3>Acționari</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nume acționar</th>
+          <th>Acțiuni</th>
+          <th>% din total</th>
+          <th>Tip vot</th>
+          <th>Prezent</th>
+          <th>Votat</th>
+        </tr>
+      </thead>
+      <tbody>${rowsAcc}</tbody>
+    </table>
+    <h3>Rezultate pe puncte</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Punct</th>
+          <th>DA (acțiuni)</th>
+          <th>NU (acțiuni)</th>
+          <th>Abțineri (acțiuni)</th>
+          <th>% DA</th>
+          <th>Rezultat</th>
+        </tr>
+      </thead>
+      <tbody>${rowsPuncte}</tbody>
+    </table>`;
+
+  openReportWindow("Raport voturi AGA", body);
+};
+
+/* ============ MOD VOTANT (sid + token) ============ */
+async function initVoter(sid,token){
+  const sref=doc(db,'sesiuni',sid);
+  const sdoc=await getDoc(sref);
+  if(!sdoc.exists()){
+    $('paginaStart').classList.remove('hidden');
+    $('paginaStart').innerHTML=`<h2>Votant</h2><p class="small">Link invalid sau sesiune indisponibilă.</p>`;
+    return;
+  }
+  const data=sdoc.data(); const acc=data.actionari||[];
+  const me=acc.find(x=>x.token===token);
+
+  $('paginaStart').classList.add('hidden');
+  $('organizator').classList.add('hidden');
+  $('votant').classList.remove('hidden');
+  $('votant').classList.add('fade-up');
+
+  if(!me){
+    $('helloVotant').innerHTML=`<b>Link invalid</b>`;
+    return;
+  }
+
+  await setDoc(doc(db,'sesiuni',sid,'presence',token),{
+    ts:Date.now(), nume:me.nume, actiuni:me.actiuni, tip:me.tip||'Online', reprezentatDe:me.procura||''
+  });
+
+  const type=classifyType(me);
+
+  if(type==="online"){
+    $('helloVotant').innerHTML=`Bun venit, <b>${me.nume}</b> • Acțiuni: <b>${me.actiuni}</b> • Tip: <b>Online</b>`;
+  }else if(type==="coresp"){
+    $('helloVotant').innerHTML=`Bun venit, <b>${me.nume}</b> • Tip: <b>Corespondență</b><br>
+      <span class="small">Votul dvs. a fost transmis prin corespondență conform instrucțiunilor depuse. Nu mai puteți modifica votul online.</span>`;
+  }else if(type==="procuraSpeciala"){
+    $('helloVotant').innerHTML=`Bun venit, <b>${me.nume}</b> • Tip: <b>Procura specială</b><br>
+      <span class="small">Votul dvs. este exprimat conform instrucțiunilor din procura specială. Nu mai puteți modifica votul online.</span>`;
+  }else if(type==="procuraGenerala"){
+    $('helloVotant').innerHTML=`Bun venit, <b>${me.nume}</b> • Tip: <b>Procura generală</b><br>
+      <span class="small">Votul dvs. se aplică și acționarilor pe care îi reprezentați prin procură generală.</span>`;
+  }
+
+  const q=(data.ordineZi||[]).slice().sort((a,b)=>a.id-b.id);
+  const host=$('listaIntrebari'); host.innerHTML="";
+  q.forEach(p=>{
+    const box=document.createElement('div'); box.className='card';
+    box.innerHTML=`
+      <h3>#${p.id}. ${p.titlu||'(fără titlu)'}</h3>
+      <div class="vote-options">
+        <label><input type="radio" name="q${p.id}" value="DA"> DA</label>
+        <label><input type="radio" name="q${p.id}" value="NU"> NU</label>
+        <label><input type="radio" name="q${p.id}" value="ABTINERE"> Abținere</label>
+      </div>
+      <p class="small">${p.majoritate||''} ${p.votSecret==='Da'?'• Vot secret':''}</p>`;
+    host.appendChild(box);
+  });
+
+  if(type==="coresp" || type==="procuraSpeciala"){
+    $('btnTrimiteVot').disabled=true;
+    $('btnTrimiteVot').style.background="#9ca3af";
+    $('statusVot').innerHTML=`<span class="badge info">Votul este deja exprimat conform documentelor depuse (corespondență / procură specială).</span>`;
+    window.trimiteVotul = function(){};
+    return;
+  }
+
+  window.trimiteVotul = async function(){
+    const rasp={};
+    q.forEach(p=>{
+      const sel=document.querySelector(`input[name="q${p.id}"]:checked`);
+      rasp[p.id]=sel?sel.value:"";
+    });
+    await setDoc(doc(db,'sesiuni',sid,'votes',token),{
+      ts:Date.now(), nume:me.nume, actiuni:me.actiuni, raspunsuri:rasp
+    });
+    $('statusVot').innerHTML=`<span class="badge ok">Vot înregistrat. Vă mulțumim!</span>`;
+    $('btnTrimiteVot').style.background="#22c55e";
+  };
+}
+
+/* ============ STARTUP ============ */
+window.addEventListener('DOMContentLoaded',()=>{
+  const p=new URLSearchParams(location.search);
+  const sid=p.get('sid'); const token=p.get('t');
+  if(sid && token){
+    // Mod votant direct, fără pagina organizator
+    initVoter(sid,token);
+  }else{
+    // Mod organizator – afișăm elegant pagina de start
+    $('paginaStart').classList.remove('hidden');
+    $('paginaStart').classList.add('fade-up');
+  }
+});
+</script>
+
+<footer class="center small" style="padding:16px;color:#6b7280">
+  Destine Holding S.A. © 2025 — Platformă AGA V8.1.14 PROCURA FIX
+</footer>
+
+</body>
+</html>
